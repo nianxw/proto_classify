@@ -1,0 +1,38 @@
+# folders
+check_points
+test_result
+
+# files
+*.pyc
+*.swp
+*.tar
+*.sh
+sbatch*
+*.ipynb
+
+# data
+pretrain
+root_emb.json
+emb.json
+# virtualenv
+.virtual
+
+# result
+result*
+
+# test data
+data/test_wiki.json
+data/test_pubmed.json
+data/train_wiki+pubmed.json
+data/pubmed.json
+
+# tmp file
+pretrain.tar
+
+# mac cache
+.DS_Store
+
+# editor cache
+.idea
+.vscode
+__pycache__
