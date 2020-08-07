@@ -44,8 +44,6 @@ def main():
            help='learning rate')
     parser.add_argument('--dropout', default=0.0, type=float,
            help='dropout rate')
-    parser.add_argument('--hidden_size', default=230, type=int,
-           help='hidden size')
     parser.add_argument('--load_ckpt', default='./check_points/model_10000.bin',
            help='load ckpt')
     parser.add_argument('--save_ckpt', default='./check_points/',
