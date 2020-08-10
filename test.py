@@ -31,7 +31,7 @@ def predict(opt, bert_model, bert_tokenizer):
                 continue
             own_state[name].copy_(param)
         bert_model.eval()
-        root_dict = read_data(opt.train_file)
+        root_dict = read_data(opt.train_file, opt.threshold)
         id_to_emd = {}
         root_cause_emb = {}
         for root_cause, samples in tqdm(root_dict.items()):
@@ -92,7 +92,9 @@ def test_acc(id_to_emd=None):
                     break
         total_num = len(indices)
         acc = true_num / total_num
-        logging.info('top %d : accuracy —— %.4f' % (k, acc))
+        logger.info('top %d : accuracy —— %.4f' % (k, acc))
+        logger.info('total numbers: %d' % total_num)
+        logger.info('true numbers: %d' % true_num)
 
 
 def classification_test(id_to_emd=None, root_cause_emb=None):

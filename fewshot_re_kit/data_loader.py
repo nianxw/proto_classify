@@ -16,12 +16,12 @@ logger = logging.getLogger(__name__)
 def filter_data(data, threshold=5):
     filtered_data = {}
     for k, v in data.items():
-        if len(v) > 5:
+        if len(v) > threshold:
             filtered_data[k] = v
     return filtered_data
 
 
-def read_data(data_path):
+def read_data(data_path, threshold):
     data = pd.read_excel(data_path, sheet_name='Sheet1', header=[0], usecols='A,B,C').fillna(0)
     data_label = {}
     count = 0
@@ -35,7 +35,7 @@ def read_data(data_path):
             data_label[label] = [text]
         else:
             data_label[label].append(text)
-    filtered_data = filter_data(data_label, threshold=5)
+    filtered_data = filter_data(data_label, threshold=threshold)
     logger.info("drop %d samples" % count)
     return filtered_data
 
@@ -44,8 +44,8 @@ class ThinkpadDataset(data.Dataset):
     """
     thinkpad 数据集
     """
-    def __init__(self, file_path, tokenizer, max_seq_len, N, K, Q):
-        self.data = read_data(file_path)
+    def __init__(self, file_path, threshold, tokenizer, max_seq_len, N, K, Q):
+        self.data = read_data(file_path, threshold)
         self.classes = list(self.data.keys())
         self.tokenizer = tokenizer
         self.cls_token = self.tokenizer.cls_token
@@ -149,8 +149,9 @@ def collate_fn(data):
     return_list = [torch.tensor(batch_data) for batch_data in return_list]
     return return_list
 
-def get_loader(file_path, encoder, max_seq_len, N, K, Q, batch_size, num_workers=8, collate_fn=collate_fn):
-    dataset = ThinkpadDataset(file_path, encoder, max_seq_len, N, K, Q)
+
+def get_loader(file_path, threshold, encoder, max_seq_len, N, K, Q, batch_size, num_workers=8, collate_fn=collate_fn):
+    dataset = ThinkpadDataset(file_path, threshold, encoder, max_seq_len, N, K, Q)
     data_loader = data.DataLoader(dataset=dataset,
                                   batch_size=batch_size,
                                   shuffle=False,

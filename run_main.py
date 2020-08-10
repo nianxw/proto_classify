@@ -21,41 +21,34 @@ logger = logging.getLogger(__name__)
 def main():
     parser = argparse.ArgumentParser()
 
+    # 模型相关
     parser.add_argument('--do_train', default=False, type=bool)
     parser.add_argument('--do_predict', default=True, type=bool)
-    parser.add_argument('--train_file', default='./data/train.xlsx',
-            help='train file')
-    parser.add_argument('--trainN', default=5, type=int,
-            help='N in train')
-    parser.add_argument('--N', default=5, type=int,
-            help='N way')
-    parser.add_argument('--K', default=3, type=int,
-            help='K shot')
-    parser.add_argument('--Q', default=3, type=int,
-            help='Num of query per class')
-    parser.add_argument('--batch_size', default=8, type=int,
-            help='batch size')
-    parser.add_argument('--train_iter', default=10000, type=int,
-            help='num of iters in training')
+    parser.add_argument('--train_file', default='./data/train.xlsx', help='train file')
+    parser.add_argument('--eval_file', default='./data/eval.xlsx', help='eval file')
+
+    parser.add_argument('--trainN', default=5, type=int, help='N in train')
+    parser.add_argument('--N', default=5, type=int, help='N way')
+    parser.add_argument('--K', default=3, type=int, help='K shot')
+    parser.add_argument('--Q', default=3, type=int, help='Num of query per class')
+    parser.add_argument('--batch_size', default=8, type=int, help='batch size')
+    parser.add_argument('--train_iter', default=10000, type=int, help='num of iters in training')
+    parser.add_argument('--eval_iter', default=2000, type=int, help='num of iters in evaluating')
     parser.add_argument('--warmup_rate', default=0.1, type=float)
-    parser.add_argument('--max_length', default=128, type=int,
-           help='max length')
-    parser.add_argument('--lr', default=2e-5, type=float,
-           help='learning rate')
-    parser.add_argument('--dropout', default=0.0, type=float,
-           help='dropout rate')
-    parser.add_argument('--load_ckpt', default='./check_points/model_10000.bin',
-           help='load ckpt')
-    parser.add_argument('--save_ckpt', default='./check_points/',
-           help='save ckpt')
-    parser.add_argument('--save_emb', default='./data/emb.json',
-           help='save embedding')
-    parser.add_argument('--save_root_emb', default='./data/root_emb.json',
-           help='save embedding')
-    parser.add_argument('--use_cuda', default=True,
-           help='whether to use cuda')
-    parser.add_argument('--save_step', default=2000,
-           help='whether to use cuda')
+    parser.add_argument('--max_length', default=128, type=int, help='max length')
+    parser.add_argument('--lr', default=1e-5, type=float, help='learning rate')
+    parser.add_argument('--dropout', default=0.0, type=float, help='dropout rate')
+
+    # 保存与加载
+    parser.add_argument('--load_ckpt', default='./check_points/model_2000.bin', help='load ckpt')
+    parser.add_argument('--save_ckpt', default='./check_points/', help='save ckpt')
+    parser.add_argument('--save_emb', default='./data/emb.json', help='save embedding')
+    parser.add_argument('--save_root_emb', default='./data/root_emb.json', help='save embedding')
+
+    parser.add_argument('--use_cuda', default=True, help='whether to use cuda')
+    parser.add_argument('--eval_step', default=500)
+    parser.add_argument('--save_step', default=500)
+    parser.add_argument('--threshold', default=1)
     # bert pretrain
     parser.add_argument("--vocab_file", default="./pretrain/vocab.txt", type=str, help="Init vocab to resume training from.")
     parser.add_argument("--config_path", default="./pretrain/bert_config.json", type=str, help="Init config to resume training from.")
@@ -79,7 +72,7 @@ def main():
         model.cuda()
 
     if opt.do_train:
-        train_data_loader = get_loader(opt.train_file, bert_tokenizer, max_length, N=trainN, K=K, Q=Q, batch_size=batch_size)
+        train_data_loader = get_loader(opt.train_file, opt.threshold, bert_tokenizer, max_length, N=trainN, K=K, Q=Q, batch_size=batch_size)
 
         framework = FewShotREFramework(train_data_loader=train_data_loader)
         framework.train(model, batch_size, trainN, K, Q, opt)
