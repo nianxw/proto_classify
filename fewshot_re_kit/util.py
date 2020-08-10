@@ -42,6 +42,17 @@ def get_series_emb(emb):
     return embeddings, label_to_id
 
 
+def get_rc_emb(emb):
+    embeddings = []
+    label_to_id = {}
+    i = 0
+    for index, value in emb.items():
+        label_to_id[i] = index
+        embeddings.append(value)
+        i += 1
+    return embeddings, label_to_id
+
+
 def calculate_distance(S, Q):
     S = S.unsqueeze(0)  # [1, N, D]
     Q = Q.unsqueeze(1)  # [Q, 1, D]
@@ -82,7 +93,7 @@ def proto_acc(proto_emb, id_to_emd):
     proto_emb: 原型emb
     '''
     emb, label_to_id = get_series_emb(id_to_emd)
-    emb_pro, label_to_rc = get_series_emb(proto_emb)
+    emb_pro, label_to_rc = get_rc_emb(proto_emb)
 
     emb_1 = torch.tensor(emb_pro)  # proto emb
     emb_2 = torch.tensor(emb)  # eval emb
