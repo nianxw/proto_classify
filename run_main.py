@@ -1,5 +1,6 @@
 from fewshot_re_kit.data_loader import get_loader, read_data
 from fewshot_re_kit.framework import FewShotREFramework
+from fewshot_re_kit import util
 from models.proto import Proto
 import torch
 import numpy as np
@@ -7,6 +8,7 @@ import argparse
 from transformers import BertModel, BertConfig, BertTokenizer
 import logging
 import random
+import json
 import test
 
 logging.basicConfig(format='%(asctime)s - %(levelname)s - %(name)s -   %(message)s',
@@ -22,6 +24,7 @@ def main():
     parser.add_argument('--do_train', default=True, type=bool, help='do train')
     parser.add_argument('--do_eval', default=True, type=bool, help='do eval')
     parser.add_argument('--do_predict', default=False, type=bool, help='do predict')
+
     parser.add_argument('--proto_emb', default=False, help='Get root cause proto emb or sentence emb. Require do_predict=True')
     parser.add_argument('--train_file', default='./data/source_data.xlsx', help='source file')
 
@@ -84,11 +87,26 @@ def main():
                                        eval_data=eval_data)
         framework.train(model, batch_size, trainN, K, Q, opt)
 
-#     if opt.do_predict:
-#         test_data = read_data(opt.train_file, opt.threshold, False)
-#         # predict proto emb or sentence emb
-#         id_to_emd, root_cause_emb = test.predict(opt, bert_model=bert_model, bert_tokenizer=bert_tokenizer)
-#         test.test_acc(id_to_emd)
+    if opt.do_predict:
+        test_data = read_data(opt.train_file, opt.threshold, False)
+        # predict proto emb or sentence emb
+        state_dict = torch.load(opt.load_ckpt)
+        own_state = bert_model.state_dict()
+        for name, param in state_dict.items():
+            name = name.replace('sentence_encoder.module.', '')
+            if name not in own_state:
+                continue
+            own_state[name].copy_(param)
+        bert_model.eval()
+        id_to_emd, root_cause_emb = util.get_emb(bert_model, bert_tokenizer, test_data, opt)
+
+        if opt.save_emb and opt.save_root_emb:
+            with open(opt.save_emb, 'w', encoding='utf8') as f:
+                json.dump(id_to_emd, f, ensure_ascii=False)
+
+            with open(opt.save_root_emb, 'w', encoding='utf8') as f:
+                json.dump(root_cause_emb, f, ensure_ascii=False)
+
 
 
 if __name__ == "__main__":

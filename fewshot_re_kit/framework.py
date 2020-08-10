@@ -110,7 +110,10 @@ class FewShotREFramework:
     def eval(self, model, opt):
         train_data_emb, train_rc_emb = util.get_emb(model, self.tokenizer, self.train_data, opt)
         eval_data_emb, _ = util.get_emb(model, self.tokenizer, self.eval_data, opt)
-        eval_acc = util.acc(train_data_emb, eval_data_emb, train_rc_emb)
+        if not opt.proto_emb:
+            eval_acc = util.single_acc(train_data_emb, eval_data_emb)
+        else:
+            eval_acc = util.proto_acc(train_rc_emb, eval_data_emb)
         return eval_acc
 
     def train(self, model, B, N_for_train, K, Q, opt):
@@ -169,7 +172,7 @@ class FewShotREFramework:
                     model.eval()
                     eval_model = model.sentence_encoder.module
                     eval_acc = self.eval(eval_model, opt)
-                    logger.info("eval used time: %.4f —— eval accuracy: [top1: %.4f] [top3: %.4f] [top5: %.4f]" % (time.time() - eval_start_time, eval_acc[0], eval_acc[1], eval_acc[2]))
+                    logger.info("eval used time: %.4f —— proto: %s eval accuracy: [top1: %.4f] [top3: %.4f] [top5: %.4f]" % (time.time() - eval_start_time, opt.proto_emb, eval_acc[0], eval_acc[1], eval_acc[2]))
                     model.train()
 
             if iter_sample % opt.save_step == 0:
