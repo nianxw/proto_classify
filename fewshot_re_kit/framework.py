@@ -169,7 +169,7 @@ class FewShotREFramework:
                     model.eval()
                     eval_model = model.sentence_encoder.module
                     eval_acc = self.eval(eval_model, opt)
-                    logger.info("eval used time: %.4f —— eval accuracy: [top1: %.4f] [top3: %.4f] [top5: %.4f]" % (time.time - eval_start_time, eval_acc[0], eval_acc[1], eval_acc[2]))
+                    logger.info("eval used time: %.4f —— eval accuracy: [top1: %.4f] [top3: %.4f] [top5: %.4f]" % (time.time() - eval_start_time, eval_acc[0], eval_acc[1], eval_acc[2]))
                     model.train()
 
             if iter_sample % opt.save_step == 0:

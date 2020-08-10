@@ -1,0 +1,68 @@
+nohup: ignoring input
+08/10/2020 17:31:07 - INFO - transformers.file_utils -   PyTorch version 0.4.1 available.
+08/10/2020 17:31:07 - INFO - __main__ -   5-way-3-shot Few-Shot Dignose
+08/10/2020 17:31:07 - INFO - __main__ -   max_length: 128
+08/10/2020 17:31:22 - INFO - transformers.tokenization_utils -   loading file https://s3.amazonaws.com/models.huggingface.co/bert/bert-base-cased-vocab.txt from cache at /home/nianxw/.cache/torch/transformers/5e8a2b4893d13790ed4150ca1906be5f7a03d6c4ddf62296c383f6db42814db2.e13dbb970cb325137104fb2e5f36fe865f27746c6b526f6352861b1980eb80b1
+08/10/2020 17:31:34 - INFO - transformers.configuration_utils -   loading configuration file https://s3.amazonaws.com/models.huggingface.co/bert/bert-base-cased-config.json from cache at /home/nianxw/.cache/torch/transformers/b945b69218e98b3e2c95acf911789741307dec43c698d35fad11c1ae28bda352.9da767be51e1327499df13488672789394e2ca38b877837e52618a67d7002391
+08/10/2020 17:31:34 - INFO - transformers.configuration_utils -   Model config BertConfig {
+  "_num_labels": 2,
+  "architectures": [
+    "BertForMaskedLM"
+  ],
+  "attention_probs_dropout_prob": 0.1,
+  "bos_token_id": null,
+  "decoder_start_token_id": null,
+  "do_sample": false,
+  "early_stopping": false,
+  "eos_token_id": null,
+  "finetuning_task": null,
+  "hidden_act": "gelu",
+  "hidden_dropout_prob": 0.1,
+  "hidden_size": 768,
+  "id2label": {
+    "0": "LABEL_0",
+    "1": "LABEL_1"
+  },
+  "initializer_range": 0.02,
+  "intermediate_size": 3072,
+  "is_decoder": false,
+  "is_encoder_decoder": false,
+  "label2id": {
+    "LABEL_0": 0,
+    "LABEL_1": 1
+  },
+  "layer_norm_eps": 1e-12,
+  "length_penalty": 1.0,
+  "max_length": 20,
+  "max_position_embeddings": 512,
+  "min_length": 0,
+  "model_type": "bert",
+  "no_repeat_ngram_size": 0,
+  "num_attention_heads": 12,
+  "num_beams": 1,
+  "num_hidden_layers": 12,
+  "num_return_sequences": 1,
+  "output_attentions": false,
+  "output_hidden_states": false,
+  "output_past": true,
+  "pad_token_id": 0,
+  "prefix": null,
+  "pruned_heads": {},
+  "repetition_penalty": 1.0,
+  "task_specific_params": null,
+  "temperature": 1.0,
+  "top_k": 50,
+  "top_p": 1.0,
+  "torchscript": false,
+  "type_vocab_size": 2,
+  "use_bfloat16": false,
+  "vocab_size": 28996
+}
+
+08/10/2020 17:31:34 - INFO - transformers.modeling_utils -   loading weights file ./pretrain/pytorch_model.bin
+08/10/2020 17:31:43 - INFO - fewshot_re_kit.data_loader -   drop 10 samples
+08/10/2020 17:31:43 - INFO - fewshot_re_kit.data_loader -   starting samples eval data
+08/10/2020 17:31:43 - INFO - fewshot_re_kit.data_loader -   train data nums: 893, eval data nums: 90
+08/10/2020 17:31:43 - INFO - fewshot_re_kit.framework -   Start training...
+08/10/2020 17:31:43 - INFO - fewshot_re_kit.framework -   Use bert optim!
+step: 1 | loss: 17.187241, accuracy: 32.50, time/step: 53.2235step: 2 | loss: 24.823048, accuracy: 25.62, time/step: 30.4731step: 3 | loss: 22.174728, accuracy: 27.08, time/step: 21.2488step: 4 | loss: 20.649817, accuracy: 26.87, time/step: 16.6760step: 5 | loss: 21.303175, accuracy: 25.75, time/step: 13.9188step: 6 | loss: 21.318932, accuracy: 23.75, time/step: 12.0571step: 7 | loss: 23.349565, accuracy: 23.39, time/step: 10.7218step: 8 | loss: 22.954743, accuracy: 23.13, time/step: 9.7366step: 9 | loss: 23.340923, accuracy: 23.47, time/step: 8.9614step: 10 | loss: 23.333240, accuracy: 23.37, time/step: 8.3525step: 11 | loss: 22.848398, accuracy: 22.73, time/step: 7.8362step: 12 | loss: 22.518324, accuracy: 22.71, time/step: 7.4184step: 13 | loss: 22.580981, accuracy: 22.88, time/step: 7.0786step: 14 | loss: 22.338154, accuracy: 23.39, time/step: 6.7788step: 15 | loss: 22.067924, accuracy: 23.42, time/step: 6.5120step: 16 | loss: 21.930882, accuracy: 23.75, time/step: 6.2793step: 17 | loss: 21.612954, accuracy: 23.68, time/step: 6.0765step: 18 | loss: 20.926599, accuracy: 23.96, time/step: 5.8872step: 19 | loss: 20.842432, accuracy: 23.82, time/step: 5.7225step: 20 | loss: 20.601382, accuracy: 23.87, time/step: 5.5731step: 21 | loss: 20.182587, accuracy: 23.51, time/step: 5.4476step: 22 | loss: 19.643291, accuracy: 23.64, time/step: 5.3219step: 23 | loss: 19.566783, accuracy: 23.70, time/step: 5.2078step: 24 | loss: 19.128946, accuracy: 23.75, time/step: 5.1052step: 25 | loss: 18.789103, accuracy: 24.05, time/step: 5.0144step: 26 | loss: 18.533773, accuracy: 24.18, time/step: 4.9290step: 27 | loss: 18.174598, accuracy: 24.44, time/step: 4.8508step: 28 | loss: 17.854476, accuracy: 24.37, time/step: 4.7794step: 29 | loss: 17.616164, accuracy: 24.40, time/step: 4.7079step: 30 | loss: 17.372684, accuracy: 24.17, time/step: 4.6476step: 31 | loss: 17.016812, accuracy: 24.11, time/step: 4.5835step: 32 | loss: 16.890888, accuracy: 23.95, time/step: 4.5262step: 33 | loss: 16.640307, accuracy: 23.83, time/step: 4.4706step: 34 | loss: 16.326553, accuracy: 24.01, time/step: 4.4220step: 35 | loss: 16.020033, accuracy: 23.86, time/step: 4.3758step: 36 | loss: 15.749920, accuracy: 24.03, time/step: 4.3300step: 37 | loss: 15.511866, accuracy: 24.26, time/step: 4.2870step: 38 | loss: 15.258719, accuracy: 24.61, time/step: 4.2458step: 39 | loss: 15.018239, accuracy: 24.55, time/step: 4.2091step: 40 | loss: 14.791477, accuracy: 24.50, time/step: 4.1744step: 41 | loss: 14.595294, accuracy: 24.63, time/step: 4.1439step: 42 | loss: 14.396519, accuracy: 24.61, time/step: 4.1123step: 43 | loss: 14.226324, accuracy: 24.80, time/step: 4.0827step: 44 | loss: 14.030946, accuracy: 24.86, time/step: 4.0514step: 45 | loss: 13.840207, accuracy: 24.78, time/step: 4.0264step: 46 | loss: 13.627198, accuracy: 25.03, time/step: 3.9979step: 47 | loss: 13.481508, accuracy: 24.97, time/step: 3.9712step: 48 | loss: 13.280106, accuracy: 25.16, time/step: 3.9464step: 49 | loss: 13.108735, accuracy: 25.15, time/step: 3.9223step: 50 | loss: 12.966980, accuracy: 25.07, time/step: 3.9001step: 51 | loss: 12.795572, accuracy: 25.10, time/step: 3.8747step: 52 | loss: 12.640905, accuracy: 25.07, time/step: 3.8542step: 53 | loss: 12.492626, accuracy: 25.12, time/step: 3.8345step: 54 | loss: 12.350192, accuracy: 25.14, time/step: 3.8166step: 55 | loss: 12.216927, accuracy: 25.09, time/step: 3.7951step: 56 | loss: 12.061209, accuracy: 25.22, time/step: 3.7771step: 57 | loss: 11.962309, accuracy: 25.26, time/step: 3.7604step: 58 | loss: 11.835704, accuracy: 25.15, time/step: 3.7432step: 59 | loss: 11.693738, accuracy: 25.15, time/step: 3.7274

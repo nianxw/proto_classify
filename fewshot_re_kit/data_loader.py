@@ -136,7 +136,7 @@ def pad_seq(insts):
 
     # input mask
     input_mask_data = np.array([[1] * len(inst) + [0] * (max_len - len(inst)) for inst in insts])
-    return_list += [input_mask_data.astype("float32")]i
+    return_list += [input_mask_data.astype("float32")]
 
     return return_list
 
@@ -168,7 +168,7 @@ def collate_fn(data):
             batch_q_label
             ]
     return_list = [torch.tensor(batch_data) for batch_data in return_list]
-    return return_lst
+    return return_list
 
 
 def get_loader(train_data, encoder, max_seq_len, N, K, Q, batch_size, num_workers=8, collate_fn=collate_fn):

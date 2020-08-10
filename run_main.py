@@ -44,7 +44,7 @@ def main():
     parser.add_argument('--save_root_emb', default='./data/root_emb.json', help='save embedding')
 
     parser.add_argument('--use_cuda', default=True, help='whether to use cuda')
-    parser.add_argument('--eval_step', default=1)
+    parser.add_argument('--eval_step', default=100)
     parser.add_argument('--save_step', default=500)
     parser.add_argument('--threshold', default=5)
 
