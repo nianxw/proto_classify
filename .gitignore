@@ -9,6 +9,7 @@ test_result
 *.sh
 sbatch*
 *.ipynb
+backup_model
 
 # data
 pretrain
