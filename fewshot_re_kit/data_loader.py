@@ -1,10 +1,9 @@
 import torch
 import torch.utils.data as data
-import os
 import numpy as np
 import pandas as pd
 import random
-import json
+import collections
 import logging
 
 logging.basicConfig(format='%(asctime)s - %(levelname)s - %(name)s -   %(message)s',
@@ -13,7 +12,7 @@ logging.basicConfig(format='%(asctime)s - %(levelname)s - %(name)s -   %(message
 logger = logging.getLogger(__name__)
 
 
-def filter_data(data, threshold=5):
+def filter_data(data, threshold):
     filtered_data = {}
     for k, v in data.items():
         if len(v) > threshold:
@@ -21,7 +20,7 @@ def filter_data(data, threshold=5):
     return filtered_data
 
 
-def read_data(data_path, threshold):
+def read_data(data_path, threshold, is_train=True):
     data = pd.read_excel(data_path, sheet_name='Sheet1', header=[0], usecols='A,B,C').fillna(0)
     data_label = {}
     count = 0
@@ -37,15 +36,37 @@ def read_data(data_path, threshold):
             data_label[label].append(text)
     filtered_data = filter_data(data_label, threshold=threshold)
     logger.info("drop %d samples" % count)
-    return filtered_data
+    if is_train:
+        logger.info("starting samples eval data")
+        train_data = collections.defaultdict(list)
+        eval_data = collections.defaultdict(list)
+
+        train_data_nums = 0
+        eval_data_nums = 0
+        for k, v in filtered_data.items():
+            eval_nums = len(v) // 10
+            if eval_nums == 0:
+                eval_nums = 1
+            eval_data_nums += eval_nums
+            train_data_nums += len(v) - eval_nums
+            indices = np.random.choice(list(range(len(v))), eval_nums)
+            for j in range(len(v)):
+                if j in indices:
+                    eval_data[k].append(v[j])
+                else:
+                    train_data[k].append(v[j])
+        logger.info('train data nums: %d, eval data nums: %d' % (train_data_nums, eval_data_nums))
+        return train_data, eval_data
+    else:
+        return filtered_data
 
 
 class ThinkpadDataset(data.Dataset):
     """
     thinkpad 数据集
     """
-    def __init__(self, file_path, threshold, tokenizer, max_seq_len, N, K, Q):
-        self.data = read_data(file_path, threshold)
+    def __init__(self, data, tokenizer, max_seq_len, N, K, Q):
+        self.data = data
         self.classes = list(self.data.keys())
         self.tokenizer = tokenizer
         self.cls_token = self.tokenizer.cls_token
@@ -107,7 +128,7 @@ def pad_seq(insts):
     return_list += [inst_data.astype("int64")]
 
     # input sentence type
-    return_list += [np.zeros_like(inst_data)]
+    return_list += [np.zeros_like(inst_data).astype("int64")]
 
     # input position
     inst_pos = np.array([list(range(0, len(inst))) + [0] * (max_len - len(inst)) for inst in insts])
@@ -115,7 +136,7 @@ def pad_seq(insts):
 
     # input mask
     input_mask_data = np.array([[1] * len(inst) + [0] * (max_len - len(inst)) for inst in insts])
-    return_list += [input_mask_data.astype("float32")]
+    return_list += [input_mask_data.astype("float32")]i
 
     return return_list
 
@@ -147,11 +168,11 @@ def collate_fn(data):
             batch_q_label
             ]
     return_list = [torch.tensor(batch_data) for batch_data in return_list]
-    return return_list
+    return return_lst
 
 
-def get_loader(file_path, threshold, encoder, max_seq_len, N, K, Q, batch_size, num_workers=8, collate_fn=collate_fn):
-    dataset = ThinkpadDataset(file_path, threshold, encoder, max_seq_len, N, K, Q)
+def get_loader(train_data, encoder, max_seq_len, N, K, Q, batch_size, num_workers=8, collate_fn=collate_fn):
+    dataset = ThinkpadDataset(train_data, encoder, max_seq_len, N, K, Q)
     data_loader = data.DataLoader(dataset=dataset,
                                   batch_size=batch_size,
                                   shuffle=False,
@@ -162,5 +183,5 @@ def get_loader(file_path, threshold, encoder, max_seq_len, N, K, Q, batch_size, 
 
 
 if __name__ == "__main__":
-    data = read_data('./data/train.xlsx')
+    data = read_data('./data/source_data.xlsx')
     logger.info("dd")

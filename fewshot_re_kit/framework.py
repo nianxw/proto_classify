@@ -1,11 +1,10 @@
 import os
 import sys
 import time
-from . import data_loader
+from fewshot_re_kit import util
 import torch
-from torch import autograd, optim, nn
-from torch.autograd import Variable
-from torch.nn import functional as F
+from torch import nn
+
 # from pytorch_pretrained_bert import BertAdam
 from transformers import AdamW, get_linear_schedule_with_warmup
 import logging
@@ -65,7 +64,13 @@ class FewShotREModel(nn.Module):
 
 class FewShotREFramework:
 
-    def __init__(self, train_data_loader=None, val_data_loader=None, test_data_loader=None):
+    def __init__(self,
+                 tokenizer=None,
+                 train_data_loader=None,
+                 val_data_loader=None,
+                 test_data_loader=None,
+                 train_data=None,
+                 eval_data=None):
         '''
         train_data_loader: DataLoader for training.
         val_data_loader: DataLoader for validating.
@@ -74,6 +79,11 @@ class FewShotREFramework:
         self.train_data_loader = train_data_loader
         self.val_data_loader = val_data_loader
         self.test_data_loader = test_data_loader
+
+        self.train_data = train_data
+        self.eval_data = eval_data
+
+        self.tokenizer = tokenizer
 
     def __load_model__(self, ckpt):
         '''
@@ -96,6 +106,12 @@ class FewShotREFramework:
             return x[0]
         else:
             return x.item()
+
+    def eval(self, model, opt):
+        train_data_emb, train_rc_emb = util.get_emb(model, self.tokenizer, self.train_data, opt)
+        eval_data_emb, _ = util.get_emb(model, self.tokenizer, self.eval_data, opt)
+        eval_acc = util.acc(train_data_emb, eval_data_emb, train_rc_emb)
+        return eval_acc
 
     def train(self, model, B, N_for_train, K, Q, opt):
         logger.info("Start training...")
@@ -146,6 +162,15 @@ class FewShotREFramework:
             iter_time += step_time
             sys.stdout.write('step: %d | loss: %.6f, accuracy: %.2f, time/step: %.4f' % (it + 1, iter_loss / iter_sample, 100 * iter_right / iter_sample, iter_time / iter_sample) +'\r')
             sys.stdout.flush()
+
+            if iter_sample % opt.eval_step == 0:
+                if opt.do_eval:
+                    eval_start_time = time.time()
+                    model.eval()
+                    eval_model = model.sentence_encoder.module
+                    eval_acc = self.eval(eval_model, opt)
+                    logger.info("eval used time: %.4f —— eval accuracy: [top1: %.4f] [top3: %.4f] [top5: %.4f]" % (time.time - eval_start_time, eval_acc[0], eval_acc[1], eval_acc[2]))
+                    model.train()
 
             if iter_sample % opt.save_step == 0:
                 logger.info("save model into %s steps: %d" % (opt.save_ckpt, iter_sample))
