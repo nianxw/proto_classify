@@ -114,3 +114,50 @@ def proto_acc(proto_emb, id_to_emd):
         total_num = len(indices)
         acc.append(true_num / total_num)
     return acc
+
+
+def get_topK_RC(data, K):
+    res = []
+    for k, v in data.items():
+        res.append((k, v))
+    res.sort(key=lambda tt: tt[1], reverse=True)
+    r = [_[0] for _ in res[: K]]
+    return r
+
+
+def policy_acc(train_data_emb, eval_data_emb, train_data, recall_num=30):
+    emb_1, label_to_id_1 = get_series_emb(train_data_emb)
+    emb_2, label_to_id_2 = get_series_emb(eval_data_emb)
+    emb_1 = torch.tensor(emb_1)  # train emb
+    emb_2 = torch.tensor(emb_2)  # eval emb
+    similarity = calculate_distance(emb_1, emb_2)  # [Q, N]
+    # 对候选结果进行归类，参数设置为30、15、10（若某个类别数据量过少，则会受到候选的影响）
+
+    acc = []
+    for x in [1, 3, 5]:
+        true_num = 0
+        _, indices = similarity.topk(similarity.shape[-1], dim=-1)
+
+        indices = indices.numpy().tolist()  # [Q, N]
+        for j in range(len(indices)):
+            cur_res = indices[j][:recall_num]
+            root_cause_score = {}
+            for m in cur_res:
+                similar_data = train_data_emb[label_to_id_1[m]]
+                rc = similar_data[-1]
+                distance = similarity[j][m].item()
+                distance = 1 / (-distance + 1e-5)
+                if rc not in root_cause_score:
+                    root_cause_score[rc] = distance
+                else:
+                    root_cause_score[rc] += distance
+            predict_cause = get_topK_RC(root_cause_score, x)
+            cur_case = eval_data_emb[label_to_id_2[j]]
+            cur_cause = cur_case[-1]
+            if cur_cause in predict_cause:
+                true_num += 1
+        total_num = len(indices)
+        acc.append(true_num / total_num)
+    return acc
+        
+

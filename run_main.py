@@ -21,7 +21,7 @@ def main():
     parser = argparse.ArgumentParser()
 
     # 模型相关
-    parser.add_argument('--do_train', default=True, type=bool, help='do train')
+    parser.add_argument('--do_train', default=False, type=bool, help='do train')
     parser.add_argument('--do_eval', default=True, type=bool, help='do eval')
     parser.add_argument('--do_predict', default=False, type=bool, help='do predict')
 
@@ -41,7 +41,7 @@ def main():
     parser.add_argument('--seed', default=46, type=int)
 
     # 保存与加载
-    parser.add_argument('--load_ckpt', default='./check_points/model_2000.bin', help='load ckpt')
+    parser.add_argument('--load_ckpt', default='./check_points/model_9500.bin', help='load ckpt')
     parser.add_argument('--save_ckpt', default='./check_points/', help='save ckpt')
     parser.add_argument('--save_emb', default='./data/emb.json', help='save embedding')
     parser.add_argument('--save_root_emb', default='./data/root_emb.json', help='save embedding')
@@ -86,6 +86,34 @@ def main():
                                        train_data=train_data,
                                        eval_data=eval_data)
         framework.train(model, batch_size, trainN, K, Q, opt)
+
+    if opt.do_eval:
+        train_data, eval_data = read_data(opt.train_file, opt.threshold)
+        state_dict = torch.load(opt.load_ckpt)
+        own_state = bert_model.state_dict()
+        for name, param in state_dict.items():
+            name = name.replace('sentence_encoder.module.', '')
+            if name not in own_state:
+                continue
+            own_state[name].copy_(param)
+        bert_model.eval()
+        train_data_emb, train_rc_emb = util.get_emb(bert_model, bert_tokenizer, train_data, opt)
+        eval_data_emb, _ = util.get_emb(bert_model, bert_tokenizer, eval_data, opt)
+        acc1 = util.single_acc(train_data_emb, eval_data_emb)
+        acc2 = util.proto_acc(train_rc_emb, eval_data_emb)
+        acc3 = util.policy_acc(train_data_emb, eval_data_emb, train_data)
+        logger.info("single eval accuracy: [top1: %.4f] [top3: %.4f] [top5: %.4f]" % (acc1[0], acc1[1], acc1[2]))
+        logger.info("proto eval accuracy: [top1: %.4f] [top3: %.4f] [top5: %.4f]" % (acc2[0], acc2[1], acc2[2]))
+        logger.info("policy eval accuracy: [top1: %.4f] [top3: %.4f] [top5: %.4f]" % (acc3[0], acc3[1], acc3[2]))
+
+        with open('./data/train_emb.json', 'w', encoding='utf8') as f:
+            json.dump(train_data_emb, f, ensure_ascii=False)
+
+        with open('./data/train_rc_emb.json', 'w', encoding='utf8') as f:
+            json.dump(train_rc_emb, f, ensure_ascii=False)
+
+        with open('./data/eval_emb.json', 'w', encoding='utf8') as f:
+            json.dump(train_rc_emb, f, ensure_ascii=False)
 
     if opt.do_predict:
         test_data = read_data(opt.train_file, opt.threshold, False)

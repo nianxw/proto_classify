@@ -182,6 +182,25 @@ def get_loader(train_data, encoder, max_seq_len, N, K, Q, batch_size, num_worker
     return iter(data_loader)
 
 
+def output_data_to_excel(data, output_path):
+    rc = []
+    abstract = []
+    des = []
+    index = []
+    for k, v in data.items():
+        for _ in v:
+            rc.append(k)
+            abstract.append(_[0])
+            des.append(_[1])
+            index.append(_[2])
+    pd_data = pd.DataFrame(data={'abstract': abstract, 'des': des, 'root_cause': rc})
+    print(index)
+    pd_data.to_excel(output_path)
+
+
 if __name__ == "__main__":
-    data = read_data('./data/source_data.xlsx')
-    logger.info("dd")
+    np.random.seed(46)
+    train_data, eval_data = read_data('./data/source_data.xlsx', 5)
+    output_data_to_excel(train_data, './data/train.xlsx')
+    output_data_to_excel(eval_data, './data/eval.xlsx')
+    logger.info("heihei")

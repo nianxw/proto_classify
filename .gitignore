@@ -10,11 +10,10 @@ test_result
 sbatch*
 *.ipynb
 backup_model
-
+*.xlsx
 # data
 pretrain
-root_emb.json
-emb.json
+*.json
 # virtualenv
 .virtual
 
