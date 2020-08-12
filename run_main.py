@@ -101,7 +101,7 @@ def main():
         eval_data_emb, _ = util.get_emb(bert_model, bert_tokenizer, eval_data, opt)
         acc1 = util.single_acc(train_data_emb, eval_data_emb)
         acc2 = util.proto_acc(train_rc_emb, eval_data_emb)
-        acc3 = util.policy_acc(train_data_emb, eval_data_emb, train_data)
+        acc3 = util.policy_acc(train_data_emb, eval_data_emb)
         logger.info("single eval accuracy: [top1: %.4f] [top3: %.4f] [top5: %.4f]" % (acc1[0], acc1[1], acc1[2]))
         logger.info("proto eval accuracy: [top1: %.4f] [top3: %.4f] [top5: %.4f]" % (acc2[0], acc2[1], acc2[2]))
         logger.info("policy eval accuracy: [top1: %.4f] [top3: %.4f] [top5: %.4f]" % (acc3[0], acc3[1], acc3[2]))
@@ -113,7 +113,7 @@ def main():
             json.dump(train_rc_emb, f, ensure_ascii=False)
 
         with open('./data/eval_emb.json', 'w', encoding='utf8') as f:
-            json.dump(train_rc_emb, f, ensure_ascii=False)
+            json.dump(eval_data_emb, f, ensure_ascii=False)
 
     if opt.do_predict:
         test_data = read_data(opt.train_file, opt.threshold, False)

@@ -1,5 +1,6 @@
 import torch
 import numpy as np
+import json
 
 
 def text_to_tensor(text, tokenizer, max_seq_len):
@@ -125,7 +126,7 @@ def get_topK_RC(data, K):
     return r
 
 
-def policy_acc(train_data_emb, eval_data_emb, train_data, recall_num=30):
+def policy_acc(train_data_emb, eval_data_emb, recall_num=15):
     emb_1, label_to_id_1 = get_series_emb(train_data_emb)
     emb_2, label_to_id_2 = get_series_emb(eval_data_emb)
     emb_1 = torch.tensor(emb_1)  # train emb
@@ -159,5 +160,10 @@ def policy_acc(train_data_emb, eval_data_emb, train_data, recall_num=30):
         total_num = len(indices)
         acc.append(true_num / total_num)
     return acc
-        
 
+
+if __name__ == "__main__":
+    train_data_emb = json.load(open('./data/train_emb.json', 'r', encoding='utf8'))
+    eval_data_emb = json.load(open('./data/eval_emb.json', 'r', encoding='utf8'))
+    acc = policy_acc(train_data_emb, eval_data_emb)
+    print(acc)
