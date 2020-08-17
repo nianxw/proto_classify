@@ -9,7 +9,8 @@ from transformers import BertModel, BertConfig, BertTokenizer
 import logging
 import random
 import json
-import test
+import os
+# import test
 
 logging.basicConfig(format='%(asctime)s - %(levelname)s - %(name)s -   %(message)s',
                     datefmt='%m/%d/%Y %H:%M:%S',
@@ -21,10 +22,10 @@ def main():
     parser = argparse.ArgumentParser()
 
     # 模型相关
-    parser.add_argument('--do_train', default=False, type=bool, help='do train')
+    parser.add_argument('--do_train', default=True, type=bool, help='do train')
     parser.add_argument('--do_eval', default=True, type=bool, help='do eval')
     parser.add_argument('--do_predict', default=False, type=bool, help='do predict')
-    parser.add_argument('--do_cn_eval', default=True, type=bool, help='do CN eval')
+    parser.add_argument('--do_cn_eval', default=False, type=bool, help='do CN eval')
 
     parser.add_argument('--proto_emb', default=False, help='Get root cause proto emb or sentence emb. Require do_predict=True')
     parser.add_argument('--train_file', default='./data/source_add_CN_V2.xlsx', help='source file')
@@ -70,6 +71,9 @@ def main():
     random.seed(opt.seed)
     np.random.seed(opt.seed)
     torch.manual_seed(opt.seed)
+
+    if not os.path.exists(opt.save_ckpt):
+        os.mkdir(opt.save_ckpt)
 
     bert_tokenizer = BertTokenizer.from_pretrained('bert-base-cased')
     bert_config = BertConfig.from_pretrained('bert-base-cased')

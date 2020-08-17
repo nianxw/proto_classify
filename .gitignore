@@ -28,6 +28,7 @@ data/pubmed.json
 
 # tmp file
 pretrain.tar
+cn_check_points
 
 # mac cache
 .DS_Store
