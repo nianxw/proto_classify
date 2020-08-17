@@ -24,9 +24,10 @@ def main():
     parser.add_argument('--do_train', default=False, type=bool, help='do train')
     parser.add_argument('--do_eval', default=True, type=bool, help='do eval')
     parser.add_argument('--do_predict', default=False, type=bool, help='do predict')
+    parser.add_argument('--do_cn_eval', default=True, type=bool, help='do CN eval')
 
     parser.add_argument('--proto_emb', default=False, help='Get root cause proto emb or sentence emb. Require do_predict=True')
-    parser.add_argument('--train_file', default='./data/source_data.xlsx', help='source file')
+    parser.add_argument('--train_file', default='./data/source_add_CN_V2.xlsx', help='source file')
 
     parser.add_argument('--trainN', default=5, type=int, help='N in train')
     parser.add_argument('--N', default=5, type=int, help='N way')
@@ -38,10 +39,10 @@ def main():
     parser.add_argument('--max_length', default=128, type=int, help='max length')
     parser.add_argument('--lr', default=1e-5, type=float, help='learning rate')
     parser.add_argument('--dropout', default=0.0, type=float, help='dropout rate')
-    parser.add_argument('--seed', default=46, type=int)
+    parser.add_argument('--seed', default=46, type=int)  # 100
 
     # 保存与加载
-    parser.add_argument('--load_ckpt', default='./check_points/model_9500.bin', help='load ckpt')
+    parser.add_argument('--load_ckpt', default='./check_points/model_54000.bin', help='load ckpt')
     parser.add_argument('--save_ckpt', default='./check_points/', help='save ckpt')
     parser.add_argument('--save_emb', default='./data/emb.json', help='save embedding')
     parser.add_argument('--save_root_emb', default='./data/root_emb.json', help='save embedding')
@@ -134,7 +135,6 @@ def main():
 
             with open(opt.save_root_emb, 'w', encoding='utf8') as f:
                 json.dump(root_cause_emb, f, ensure_ascii=False)
-
 
 
 if __name__ == "__main__":

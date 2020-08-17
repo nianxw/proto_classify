@@ -72,7 +72,7 @@ def single_acc(id_to_emd_1, id_to_emd_2):
     similarity = calculate_distance(emb_1, emb_2)  # [Q, N]
 
     acc = []
-    for k in [1, 3, 5]:
+    for k in [1, 3, 5, 10, 50]:
         true_num = 0
         _, indices = similarity.topk(k, dim=-1)
         indices = indices.numpy().tolist()
@@ -101,7 +101,7 @@ def proto_acc(proto_emb, id_to_emd):
     similarity = calculate_distance(emb_1, emb_2)  # [Q, N]
 
     acc = []
-    for k in [1, 3, 5]:
+    for k in [1, 3, 5, 10]:
         true_num = 0
         _, indices = similarity.topk(k, dim=-1)
         indices = indices.numpy().tolist()
@@ -126,7 +126,7 @@ def get_topK_RC(data, K):
     return r
 
 
-def policy_acc(train_data_emb, eval_data_emb, recall_num=15):
+def policy_acc(train_data_emb, eval_data_emb, recall_num=100):  # 57
     emb_1, label_to_id_1 = get_series_emb(train_data_emb)
     emb_2, label_to_id_2 = get_series_emb(eval_data_emb)
     emb_1 = torch.tensor(emb_1)  # train emb
@@ -135,7 +135,7 @@ def policy_acc(train_data_emb, eval_data_emb, recall_num=15):
     # 对候选结果进行归类，参数设置为30、15、10（若某个类别数据量过少，则会受到候选的影响）
 
     acc = []
-    for x in [1, 3, 5]:
+    for x in [1, 3, 5, 10, 50]:
         true_num = 0
         _, indices = similarity.topk(similarity.shape[-1], dim=-1)
 
@@ -165,5 +165,11 @@ def policy_acc(train_data_emb, eval_data_emb, recall_num=15):
 if __name__ == "__main__":
     train_data_emb = json.load(open('./data/train_emb.json', 'r', encoding='utf8'))
     eval_data_emb = json.load(open('./data/eval_emb.json', 'r', encoding='utf8'))
-    acc = policy_acc(train_data_emb, eval_data_emb)
-    print(acc)
+    train_rc_emb = json.load(open('./data/train_rc_emb.json', 'r', encoding='utf8'))
+
+    acc1 = single_acc(train_data_emb, eval_data_emb)
+    print(acc1)
+    acc2 = proto_acc(train_rc_emb, eval_data_emb)
+    print(acc2)
+    acc3 = policy_acc(train_data_emb, eval_data_emb, 57)
+    print(acc3)

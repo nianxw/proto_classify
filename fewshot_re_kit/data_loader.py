@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 import random
 import collections
+import json
 import logging
 
 logging.basicConfig(format='%(asctime)s - %(levelname)s - %(name)s -   %(message)s',
@@ -12,14 +13,44 @@ logging.basicConfig(format='%(asctime)s - %(levelname)s - %(name)s -   %(message
 logger = logging.getLogger(__name__)
 
 
+def get_rc_data(data, rc_lists):
+    new_data = {}
+    count = 0
+    for k, v in data.items():
+        if k in rc_lists:
+            new_data[k] = v
+            count += len(v)
+    logger.info('Remained data numbers: %d' % count)
+    return new_data
+
+
+def RC_align(path):
+    def RC_align_out(function):
+        def wrap(data_path, threshold, is_train=True):
+            rc_list = json.load(open(path, 'r', encoding='utf8'))
+            data = function(data_path, threshold, is_train)
+            if is_train:
+                train_data, eval_data = data
+                train_data, eval_data = get_rc_data(train_data, rc_list), get_rc_data(eval_data, rc_list)
+                return train_data, eval_data
+            else:
+                filtered_data = data
+                filtered_data = get_rc_data(filtered_data, rc_list)
+                return filtered_data
+        return wrap
+    return RC_align_out
+
+
 def filter_data(data, threshold):
     filtered_data = {}
     for k, v in data.items():
         if len(v) > threshold:
             filtered_data[k] = v
+    logger.info('root cause numbers: %d' % len(filtered_data))
     return filtered_data
 
 
+@RC_align('./data/rc_list.json')
 def read_data(data_path, threshold, is_train=True):
     data = pd.read_excel(data_path, sheet_name='Sheet1', header=[0], usecols='A,B,C').fillna(0)
     data_label = {}
@@ -199,8 +230,17 @@ def output_data_to_excel(data, output_path):
 
 
 if __name__ == "__main__":
-    np.random.seed(46)
+    np.random.seed(100)
+    train_data, eval_data = read_data('./data/source_add_CN_V2.xlsx', 5)
+    print(len(train_data.keys()))
     train_data, eval_data = read_data('./data/source_data.xlsx', 5)
-    output_data_to_excel(train_data, './data/train.xlsx')
-    output_data_to_excel(eval_data, './data/eval.xlsx')
-    logger.info("heihei")
+    print(len(train_data.keys()))
+
+
+    # output_data_to_excel(train_data, './data/train.xlsx')
+    # output_data_to_excel(eval_data, './data/eval.xlsx')
+    # logger.info("heihei")
+
+    # train_rc_emb = json.load(open('./data/train_rc_emb.json', 'r', encoding='utf8'))
+    # rc_list = list(train_rc_emb.keys())
+    # json.dump(rc_list, open('./data/rc_list.json', 'w', encoding='utf8'), ensure_ascii=False)
