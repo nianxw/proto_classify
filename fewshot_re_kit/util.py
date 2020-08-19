@@ -60,16 +60,24 @@ def calculate_distance(S, Q):
     return -(torch.pow(S - Q, 2)).sum(2)  # [Q, N]
 
 
+def get_similarity(id_to_emd_1, id_to_emd_2, proto=False):
+    if not proto:
+        emb_1, label_to_id_1 = get_series_emb(id_to_emd_1)
+    else:
+        emb_1, label_to_id_1 = get_rc_emb(id_to_emd_1)
+    emb_2, label_to_id_2 = get_series_emb(id_to_emd_2)
+    emb_1 = torch.tensor(emb_1)  # train emb
+    emb_2 = torch.tensor(emb_2)  # eval emb
+    similarity = calculate_distance(emb_1, emb_2)  # [Q, N]
+    return similarity, label_to_id_1, label_to_id_2
+
+
 def single_acc(id_to_emd_1, id_to_emd_2):
     '''
     id_to_emd_1: 被查询的emb
     id_to_emd_2: 查询emb
     '''
-    emb_1, label_to_id_1 = get_series_emb(id_to_emd_1)
-    emb_2, label_to_id_2 = get_series_emb(id_to_emd_2)
-    emb_1 = torch.tensor(emb_1)  # train emb
-    emb_2 = torch.tensor(emb_2)  # eval emb
-    similarity = calculate_distance(emb_1, emb_2)  # [Q, N]
+    similarity, label_to_id_1, label_to_id_2 = get_similarity(id_to_emd_1, id_to_emd_2)
 
     acc = []
     for k in [1, 3, 5, 10, 50]:
@@ -88,17 +96,12 @@ def single_acc(id_to_emd_1, id_to_emd_2):
     return acc
 
 
-def proto_acc(proto_emb, id_to_emd):
+def proto_acc(id_to_emd_1, id_to_emd_2):
     '''
     id_to_emd: 查询emb
     proto_emb: 原型emb
     '''
-    emb, label_to_id = get_series_emb(id_to_emd)
-    emb_pro, label_to_rc = get_rc_emb(proto_emb)
-
-    emb_1 = torch.tensor(emb_pro)  # proto emb
-    emb_2 = torch.tensor(emb)  # eval emb
-    similarity = calculate_distance(emb_1, emb_2)  # [Q, N]
+    similarity, label_to_id_1, label_to_id_2 = get_similarity(id_to_emd_1, id_to_emd_2, True)
 
     acc = []
     for k in [1, 3, 5, 10]:
@@ -108,8 +111,8 @@ def proto_acc(proto_emb, id_to_emd):
         for j in range(len(indices)):
             cur_res = indices[j]
             for m in cur_res:
-                rc = label_to_rc[m]
-                if rc == id_to_emd[label_to_id[j]][-1]:
+                rc = label_to_id_1[m]
+                if rc == id_to_emd_2[label_to_id_2[j]][-1]:
                     true_num += 1
                     break
         total_num = len(indices)
@@ -127,11 +130,7 @@ def get_topK_RC(data, K):
 
 
 def policy_acc(train_data_emb, eval_data_emb, recall_num=100):  # 57
-    emb_1, label_to_id_1 = get_series_emb(train_data_emb)
-    emb_2, label_to_id_2 = get_series_emb(eval_data_emb)
-    emb_1 = torch.tensor(emb_1)  # train emb
-    emb_2 = torch.tensor(emb_2)  # eval emb
-    similarity = calculate_distance(emb_1, emb_2)  # [Q, N]
+    similarity, label_to_id_1, label_to_id_2 = get_similarity(train_data_emb, eval_data_emb)
     # 对候选结果进行归类，参数设置为30、15、10（若某个类别数据量过少，则会受到候选的影响）
 
     acc = []
@@ -160,6 +159,56 @@ def policy_acc(train_data_emb, eval_data_emb, recall_num=100):  # 57
         total_num = len(indices)
         acc.append(true_num / total_num)
     return acc
+
+
+def vote_acc(t1, e1, t2, e2, proto=False, policy=False, recall_num=60):
+    similarity_1, label_to_id_1, label_to_id_2 = get_similarity(t1, e1, proto)
+    similarity_2, _, _ = get_similarity(t2, e2, proto)
+    similarity = similarity_1 + similarity_2
+
+    acc = []
+    if not policy:
+        for k in [1, 3, 5, 10, 50]:
+            true_num = 0
+            _, indices = similarity.topk(k, dim=-1)
+            indices = indices.numpy().tolist()
+            for j in range(len(indices)):
+                cur_res = indices[j]
+                for m in cur_res:
+                    rc = t1[label_to_id_1[m]][-1]
+                    if rc == e1[label_to_id_2[j]][-1]:
+                        true_num += 1
+                        break
+            total_num = len(indices)
+            acc.append(true_num / total_num)
+    else:
+        for x in [1, 3, 5, 10, 50]:
+            true_num = 0
+            _, indices = similarity.topk(similarity.shape[-1], dim=-1)
+
+            indices = indices.numpy().tolist()  # [Q, N]
+            for j in range(len(indices)):
+                cur_res = indices[j][:recall_num]
+                root_cause_score = {}
+                for m in cur_res:
+                    similar_data = t1[label_to_id_1[m]]
+                    rc = similar_data[-1]
+                    distance = similarity[j][m].item()
+                    distance = 1 / (-distance + 1e-5)
+                    if rc not in root_cause_score:
+                        root_cause_score[rc] = distance
+                    else:
+                        root_cause_score[rc] += distance
+                predict_cause = get_topK_RC(root_cause_score, x)
+                cur_case = e1[label_to_id_2[j]]
+                cur_cause = cur_case[-1]
+                if cur_cause in predict_cause:
+                    true_num += 1
+            total_num = len(indices)
+            acc.append(true_num / total_num)
+
+    return acc
+
 
 
 if __name__ == "__main__":

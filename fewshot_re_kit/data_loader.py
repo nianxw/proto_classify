@@ -232,13 +232,12 @@ def output_data_to_excel(data, output_path):
 if __name__ == "__main__":
     np.random.seed(100)
     train_data, eval_data = read_data('./data/source_add_CN_V2.xlsx', 5)
-    print(len(train_data.keys()))
-    train_data, eval_data = read_data('./data/source_data.xlsx', 5)
-    print(len(train_data.keys()))
+    # print(len(train_data.keys()))
+    # train_data, eval_data = read_data('./data/source_data.xlsx', 5)
+    # print(len(train_data.keys()))
 
-
-    # output_data_to_excel(train_data, './data/train.xlsx')
-    # output_data_to_excel(eval_data, './data/eval.xlsx')
+    # output_data_to_excel(train_data, './data/t1.xlsx')
+    # output_data_to_excel(eval_data, './data/t2.xlsx')
     # logger.info("heihei")
 
     # train_rc_emb = json.load(open('./data/train_rc_emb.json', 'r', encoding='utf8'))

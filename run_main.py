@@ -40,7 +40,7 @@ def main():
     parser.add_argument('--max_length', default=128, type=int, help='max length')
     parser.add_argument('--lr', default=1e-5, type=float, help='learning rate')
     parser.add_argument('--dropout', default=0.0, type=float, help='dropout rate')
-    parser.add_argument('--seed', default=46, type=int)  # 100
+    parser.add_argument('--seed', default=100, type=int)  # 100
 
     # 保存与加载
     parser.add_argument('--load_ckpt', default='./check_points/model_54000.bin', help='load ckpt')
