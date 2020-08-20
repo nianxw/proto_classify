@@ -80,19 +80,31 @@ def single_acc(id_to_emd_1, id_to_emd_2):
     similarity, label_to_id_1, label_to_id_2 = get_similarity(id_to_emd_1, id_to_emd_2)
 
     acc = []
+    res = {}
     for k in [1, 3, 5, 10, 50]:
+        tmp_search_rc = []
         true_num = 0
         _, indices = similarity.topk(k, dim=-1)
         indices = indices.numpy().tolist()
         for j in range(len(indices)):
             cur_res = indices[j]
+
+            # 获取真实rc
+            tmp_rc = []
+            for m in cur_res:
+                rc = id_to_emd_1[label_to_id_1[m]][-1]
+                tmp_rc.append(rc)
+            tmp_search_rc.append(tmp_rc)
+
             for m in cur_res:
                 rc = id_to_emd_1[label_to_id_1[m]][-1]
                 if rc == id_to_emd_2[label_to_id_2[j]][-1]:
                     true_num += 1
                     break
+        res['top%d' % k] = tmp_search_rc
         total_num = len(indices)
         acc.append(true_num / total_num)
+    json.dump(res, open('./data/predict/single.json', 'w', encoding='utf8'))
     return acc
 
 
@@ -104,19 +116,31 @@ def proto_acc(id_to_emd_1, id_to_emd_2):
     similarity, label_to_id_1, label_to_id_2 = get_similarity(id_to_emd_1, id_to_emd_2, True)
 
     acc = []
+    res = {}
     for k in [1, 3, 5, 10]:
+        tmp_search_rc = []
         true_num = 0
         _, indices = similarity.topk(k, dim=-1)
         indices = indices.numpy().tolist()
         for j in range(len(indices)):
             cur_res = indices[j]
+
+            # 获取真实rc
+            tmp_rc = []
+            for m in cur_res:
+                rc = label_to_id_1[m]
+                tmp_rc.append(rc)
+            tmp_search_rc.append(tmp_rc)
+
             for m in cur_res:
                 rc = label_to_id_1[m]
                 if rc == id_to_emd_2[label_to_id_2[j]][-1]:
                     true_num += 1
                     break
+        res['top%d' % k] = tmp_search_rc
         total_num = len(indices)
         acc.append(true_num / total_num)
+    json.dump(res, open('./data/predict/proto.json', 'w', encoding='utf8'))
     return acc
 
 
@@ -134,7 +158,9 @@ def policy_acc(train_data_emb, eval_data_emb, recall_num=100):  # 57
     # 对候选结果进行归类，参数设置为30、15、10（若某个类别数据量过少，则会受到候选的影响）
 
     acc = []
+    res = {}  # 获取预测的 root cause 结果
     for x in [1, 3, 5, 10, 50]:
+        tmp_search_rc = []
         true_num = 0
         _, indices = similarity.topk(similarity.shape[-1], dim=-1)
 
@@ -152,12 +178,15 @@ def policy_acc(train_data_emb, eval_data_emb, recall_num=100):  # 57
                 else:
                     root_cause_score[rc] += distance
             predict_cause = get_topK_RC(root_cause_score, x)
+            tmp_search_rc.append(predict_cause)
             cur_case = eval_data_emb[label_to_id_2[j]]
             cur_cause = cur_case[-1]
             if cur_cause in predict_cause:
                 true_num += 1
         total_num = len(indices)
         acc.append(true_num / total_num)
+        res['top%d' % x] = tmp_search_rc
+    json.dump(res, open('./data/predict/policy.json', 'w', encoding='utf8'))
     return acc
 
 

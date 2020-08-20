@@ -75,8 +75,8 @@ def main():
     if not os.path.exists(opt.save_ckpt):
         os.mkdir(opt.save_ckpt)
 
-    bert_tokenizer = BertTokenizer.from_pretrained('bert-base-cased')
-    bert_config = BertConfig.from_pretrained('bert-base-cased')
+    bert_tokenizer = BertTokenizer.from_pretrained(opt.vocab_file)
+    bert_config = BertConfig.from_pretrained(opt.config_path)
     bert_model = BertModel.from_pretrained(opt.init_checkpoint, config=bert_config)
     model = Proto(bert_model, opt)
     if opt.use_cuda:
@@ -101,6 +101,7 @@ def main():
             if name not in own_state:
                 continue
             own_state[name].copy_(param)
+        step = opt.load_ckpt.split('/')[-1].replace('model_', '').split('.')[0]
         bert_model.eval()
         train_data_emb, train_rc_emb = util.get_emb(bert_model, bert_tokenizer, train_data, opt)
         eval_data_emb, _ = util.get_emb(bert_model, bert_tokenizer, eval_data, opt)
@@ -111,13 +112,13 @@ def main():
         logger.info("proto eval accuracy: [top1: %.4f] [top3: %.4f] [top5: %.4f]" % (acc2[0], acc2[1], acc2[2]))
         logger.info("policy eval accuracy: [top1: %.4f] [top3: %.4f] [top5: %.4f]" % (acc3[0], acc3[1], acc3[2]))
 
-        with open('./data/train_emb.json', 'w', encoding='utf8') as f:
+        with open('./data/train_emb_%s.json' % step, 'w', encoding='utf8') as f:
             json.dump(train_data_emb, f, ensure_ascii=False)
 
-        with open('./data/train_rc_emb.json', 'w', encoding='utf8') as f:
+        with open('./data/train_rc_emb_%s.json' % step, 'w', encoding='utf8') as f:
             json.dump(train_rc_emb, f, ensure_ascii=False)
 
-        with open('./data/eval_emb.json', 'w', encoding='utf8') as f:
+        with open('./data/eval_emb_%s.json' % step, 'w', encoding='utf8') as f:
             json.dump(eval_data_emb, f, ensure_ascii=False)
 
     if opt.do_predict:
